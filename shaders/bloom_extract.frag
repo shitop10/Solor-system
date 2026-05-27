@@ -1,0 +1,15 @@
+#version 330 core
+// Bright-pass: extract fragments above luminance threshold for bloom
+in vec2 vTexCoord;
+uniform sampler2D sceneTex;
+uniform float threshold;
+out vec4 FragColor;
+
+void main() {
+    vec3 color = texture(sceneTex, vTexCoord).rgb;
+    float brightness = dot(color, vec3(0.2126, 0.7152, 0.0722));
+    if (brightness > threshold)
+        FragColor = vec4(color, 1.0);
+    else
+        FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+}

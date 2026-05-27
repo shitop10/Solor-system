@@ -1,0 +1,36 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cmake --version)",
+      "Read(//c/Program Files \\(x86\\)/Microsoft Visual Studio/**)",
+      "Read(//c/Program Files/Microsoft Visual Studio/2022/**)",
+      "Read(//c/Program Files/Microsoft Visual Studio/2022//**)",
+      "Bash(pip install *)",
+      "Bash(python -m glad --api gl=3.3 --profile core --generator c --out-path third_party/glad)",
+      "Read(//mingw64/**)",
+      "Read(//usr/**)",
+      "Read(//c//**)",
+      "Bash(cmake --build . --config Debug)",
+      "Bash(cmd.exe /c '\"C:\\\\Program Files\\\\Microsoft Visual Studio\\\\2022\\\\Professional\\\\VC\\\\Auxiliary\\\\Build\\\\vcvars64.bat\" >nul 2>&1 && cl /nologo /I third_party/glad/include /EHsc /c test_inc.cpp 2>&1')",
+      "Bash(mkdir -p old_files)",
+      "Bash(mv CelestialPhysics.h CelestialRenderer.h SolarSystem.h SpaceCamera.h old_files/)",
+      "Bash(cmake .. -G \"Visual Studio 17 2022\" -A x64)",
+      "Bash(start \"SolarSystem\" \"solar_system.exe\")",
+      "Bash(cmd.exe /c \"start \\\\\"\\\\\" \\\\\"solar_system.exe\\\\\"\")",
+      "Bash(awk '{print $NF}')",
+      "Bash(cmake --build . --config Debug --target solar_system)",
+      "Bash(cmd.exe *)",
+      "Bash(cmake --build . --config Debug --clean-first)",
+      "Bash(taskkill /F /IM solar_system.exe)",
+      "Bash(cmake --build build --config Debug)",
+      "Bash(timeout 3 ./solar_system.exe)",
+      "Bash(timeout 2 ./solar_system.exe)",
+      "Bash(echo \"EXIT_CODE=$?\")",
+      "Bash(./solar_system.exe)",
+      "Bash(tasklist)",
+      "Bash(taskkill /f /im solar_system.exe)",
+      "Bash(cp \"C:/Users/88571/Desktop/计算机图形学课设/Solor-system/shaders/\"*.vert \"C:/Users/88571/Desktop/计算机图形学课设/Solor-system/build/Debug/shaders/\")",
+      "Bash(cp \"C:/Users/88571/Desktop/计算机图形学课设/Solor-system/shaders/\"*.frag \"C:/Users/88571/Desktop/计算机图形学课设/Solor-system/build/Debug/shaders/\")"
+    ]
+  }
+}
