@@ -50,13 +50,15 @@ bool zPrepassEnabled = true;
 bool manualCulling = false;
 bool bloomEnabled = false;
 bool shadowEnabled = true;
+bool scrollSunMode = false;   // L key: scroll adjusts sun intensity instead of zoom
+float sunIntensity = 1.5f;    // sun brightness multiplier
 int  fogModeIdx = 2;
 
-// ── Per-key edge-detection state (global, not static-in-function) ──
+// ── Per-key edge-detection state ──
 struct KeyState {
     bool k1,k2,k3, sp, eq, min, o, f, z, b, v, g, a, h;
     bool m, n, p, up, dn, lt, rt, k5, k6, k7, k8;
-    bool r;
+    bool r, tab, mmb, l;
 } prevKey = {};
 
 // ── Inline orbit shader ───────────────────────────────
@@ -192,9 +194,26 @@ void processInput() {
     for (int i = 0; i < 256; i++) k[i] = window.keys[i];
 
     // Camera modes
-    if (edge(k['1'], prevKey.k1)) camera.mode = FREE_CAMERA;
-    if (edge(k['2'], prevKey.k2)) camera.mode = ORBIT_CAMERA;
-    if (edge(k['3'], prevKey.k3)) camera.mode = SYSTEM_VIEW;
+    if (edge(k['1'], prevKey.k1)) { camera.mode = FREE_CAMERA; printf("[Camera] Free mode\n"); }
+    if (edge(k['2'], prevKey.k2)) { camera.mode = ORBIT_CAMERA; printf("[Camera] Orbit mode\n"); }
+    if (edge(k['3'], prevKey.k3)) { camera.mode = TOP_DOWN_VIEW; printf("[Camera] Top-down mode\n"); }
+
+    // Cycle orbit target (Tab key)
+    if (edge(k[VK_TAB], prevKey.tab)) {
+        int curIdx = -1;
+        for (int i = 0; i < (int)solarSystem.bodies.size(); i++) {
+            if (solarSystem.bodies[i]->name == camera.targetName) { curIdx = i; break; }
+        }
+        int nextIdx = (curIdx + 1) % (int)solarSystem.bodies.size();
+        auto& body = solarSystem.bodies[nextIdx];
+        camera.setOrbitTarget(body->worldPos(), body->name);
+    }
+
+    // Shift = speed boost
+    camera.setSpeedBoost(k[VK_SHIFT]);
+
+    // Middle mouse click = reset view
+    if (edge(window.mouseDown[1], prevKey.mmb)) camera.resetView();
 
     // Pause
     if (edge(k[VK_SPACE], prevKey.sp)) solarSystem.paused = !solarSystem.paused;
@@ -226,6 +245,13 @@ void processInput() {
         shadowEnabled = !shadowEnabled;
         shadowMap.enabled = shadowEnabled;
         printf("[Shadow] %s\n", shadowEnabled ? "ON" : "OFF");
+    }
+
+    // Sun intensity mode toggle (L key)
+    if (edge(k['L'], prevKey.l)) {
+        scrollSunMode = !scrollSunMode;
+        printf("[Sun] Scroll controls %s (intensity=%.1f)\n",
+               scrollSunMode ? "SUN BRIGHTNESS" : "ZOOM", sunIntensity);
     }
 
     // Reset time
@@ -356,29 +382,32 @@ void renderPlanetBody(CelestialBody& body, const glm::mat4& view,
         glBlendFunc(GL_SRC_ALPHA, GL_ONE);
         glDepthMask(GL_FALSE);
 
+        // Inner tight glow — barely larger than sun disc
         glm::mat4 g1 = glm::mat4(1.0f);
         g1 = glm::translate(g1, body.worldPos());
-        g1 = glm::scale(g1, glm::vec3(r * 1.3f));
+        g1 = glm::scale(g1, glm::vec3(r * 1.15f));
         glowShader->setMat4("model", g1);
         glowShader->setVec3("uGlowColor", glm::vec3(1.0f, 0.9f, 0.3f));
-        glowShader->setFloat("uIntensity", 3.0f);
+        glowShader->setFloat("uIntensity", 3.5f);
         body.sphereMesh.bind();
         glDrawElements(GL_TRIANGLES, body.sphereMesh.indexCount, GL_UNSIGNED_INT, 0);
 
+        // Mid glow — warm corona
         glm::mat4 g2 = glm::mat4(1.0f);
         g2 = glm::translate(g2, body.worldPos());
-        g2 = glm::scale(g2, glm::vec3(r * 2.0f));
+        g2 = glm::scale(g2, glm::vec3(r * 1.35f));
         glowShader->setMat4("model", g2);
         glowShader->setVec3("uGlowColor", glm::vec3(1.0f, 0.65f, 0.12f));
-        glowShader->setFloat("uIntensity", 1.5f);
+        glowShader->setFloat("uIntensity", 1.8f);
         glDrawElements(GL_TRIANGLES, body.sphereMesh.indexCount, GL_UNSIGNED_INT, 0);
 
+        // Outer soft glow — faint extended halo
         glm::mat4 g3 = glm::mat4(1.0f);
         g3 = glm::translate(g3, body.worldPos());
-        g3 = glm::scale(g3, glm::vec3(r * 3.5f));
+        g3 = glm::scale(g3, glm::vec3(r * 1.7f));
         glowShader->setMat4("model", g3);
         glowShader->setVec3("uGlowColor", glm::vec3(1.0f, 0.40f, 0.05f));
-        glowShader->setFloat("uIntensity", 0.6f);
+        glowShader->setFloat("uIntensity", 0.8f);
         glDrawElements(GL_TRIANGLES, body.sphereMesh.indexCount, GL_UNSIGNED_INT, 0);
 
         glBindVertexArray(0);
@@ -391,7 +420,7 @@ void renderPlanetBody(CelestialBody& body, const glm::mat4& view,
         ringShader->use();
         ringShader->setBool("fogEnabled", fogEnabled);
         ringShader->setVec3("fogColor", glm::vec3(0.0f, 0.0f, 0.03f));
-        ringShader->setFloat("fogDensity", 0.0002f);
+        ringShader->setFloat("fogDensity", 0.00002f);
         ringShader->setInt("fogMode", fogModeIdx);
         ringShader->setFloat("fogNear", 1.0f);
         ringShader->setFloat("fogFar", 300.0f);
@@ -421,7 +450,7 @@ void renderPlanetBody(CelestialBody& body, const glm::mat4& view,
         ringShader->use();
         ringShader->setBool("fogEnabled", fogEnabled);
         ringShader->setVec3("fogColor", glm::vec3(0.0f, 0.0f, 0.03f));
-        ringShader->setFloat("fogDensity", 0.0002f);
+        ringShader->setFloat("fogDensity", 0.00002f);
         ringShader->setInt("fogMode", fogModeIdx);
         ringShader->setFloat("fogNear", 1.0f);
         ringShader->setFloat("fogFar", 300.0f);
@@ -529,12 +558,12 @@ void renderScene() {
     float aspect = (float)w / (float)h;
     glm::mat4 projection = camera.getProjection(aspect);
     glm::mat4 view = camera.getViewMatrix();
-    glm::vec3 viewPos = camera.getPosition();
+    glm::vec3 viewPos = camera.getSmoothPosition();
 
     auto setupFog = [&](Shader& s) {
         s.setBool("fogEnabled", fogEnabled);
         s.setVec3("fogColor", fogCol);
-        s.setFloat("fogDensity", 0.0002f);
+        s.setFloat("fogDensity", 0.00002f);
         s.setInt("fogMode", fogModeIdx);
         s.setFloat("fogNear", 1.0f);
         s.setFloat("fogFar", 300.0f);
@@ -545,6 +574,10 @@ void renderScene() {
 
     // 2. Update lighting + shadow pass
     lights.updateSunPosition(solarSystem.sunPosition());
+    // Apply sun intensity multiplier to sun light (index 0)
+    lights.pointLights[0].ambient  = glm::vec3(0.8f,0.8f,0.8f) * sunIntensity;
+    lights.pointLights[0].diffuse  = glm::vec3(3.5f,3.2f,2.5f) * sunIntensity;
+    lights.pointLights[0].specular = glm::vec3(1.8f,1.5f,1.2f) * sunIntensity;
     shadowPass();
 
     // 3. Z-Prepass
@@ -728,10 +761,11 @@ void renderScene() {
             em.emissive.x, em.emissive.y, em.emissive.z);
     } else {
         snprintf(title, sizeof(title),
-            "Solar System 3D | FPS:%d | T:%.2fyr | %s | %s | Z:%s | S:%s | G:%s | [M=MatEdit H=Shadow]",
+            "Solar System 3D | %s @ %s | FPS:%d | Sun:%.1f %s | %s | Z:%s S:%s G:%s | [L=SunAdj Tab=Target]",
+            camera.modeName(), camera.targetName.c_str(),
             fpsCounter.getFPS(),
-            solarSystem.simulationTime,
-            camera.modeName(), solarSystem.paused ? "PAUSED" : "RUNNING",
+            sunIntensity, scrollSunMode ? "(SCROLL)" : "",
+            solarSystem.paused ? "PAUSED" : "RUNNING",
             zPrepassEnabled ? "ZP" : "--",
             shadowEnabled ? "SD" : "--",
             bloomEnabled ? "BL" : "--");
@@ -745,6 +779,7 @@ int main() {
     AllocConsole();
     freopen("CONOUT$","w",stdout);
     freopen("CONOUT$","w",stderr);
+    SetConsoleOutputCP(65001);  // UTF-8 for Chinese character support
     printf("=== Solar System 3D — Multi-Material PBR Renderer ===\n");
 
     if (!window.create("Solar System 3D",1280,720,true)) {
@@ -765,8 +800,22 @@ int main() {
     window.onResize=[](int w,int h){
         glViewport(0,0,w,h); zBuffer.init(w,h); postProcess.init(w,h);
     };
-    window.onScroll=[](float d){camera.processScroll(d);};
-    window.onMouseDrag=[](float dx,float dy){camera.processMouseDrag(dx,dy);};
+    window.onScroll=[](float d){
+        if (scrollSunMode) {
+            sunIntensity += d * 0.15f;
+            sunIntensity = glm::clamp(sunIntensity, 0.1f, 5.0f);
+            printf("[Sun] Intensity: %.1f\n", sunIntensity);
+        } else {
+            camera.processScroll(d);
+        }
+    };
+    window.onMouseDrag=[](float dx,float dy){
+        // Left button = rotate, Middle button = pan
+        if (window.mouseDown[1])
+            camera.processPan(dx, dy);
+        else if (window.mouseDown[0])
+            camera.processMouseDrag(dx, dy);
+    };
 
     // Load shaders
     planetShader   = new Shader("shaders/planet.vert", "shaders/planet.frag");
@@ -813,14 +862,14 @@ int main() {
     }
     printf("--- end ---\n\n");
 
-    // Sun as bright point light
+    // Sun — bright distant point light (near-directional behavior)
     lights.useDirLight=false;
     PointLight sunLight;
     sunLight.position=glm::vec3(0,0,0);
-    sunLight.ambient=glm::vec3(0.5f,0.5f,0.5f);
-    sunLight.diffuse=glm::vec3(2.5f,2.2f,1.8f);
-    sunLight.specular=glm::vec3(1.5f,1.3f,1.0f);
-    sunLight.constant=1.0f; sunLight.linear=0.0002f; sunLight.quadratic=0.00002f;
+    sunLight.ambient=glm::vec3(0.8f,0.8f,0.8f);   // boosted ambient
+    sunLight.diffuse=glm::vec3(3.5f,3.2f,2.5f);    // boosted diffuse
+    sunLight.specular=glm::vec3(1.8f,1.5f,1.2f);
+    sunLight.constant=1.0f; sunLight.linear=0.00005f; sunLight.quadratic=0.000005f;  // much slower falloff
     lights.pointLights.push_back(sunLight);
 
     // Dynamic orbit light
@@ -831,11 +880,54 @@ int main() {
     orbitLight.constant=1.0f; orbitLight.linear=0.05f; orbitLight.quadratic=0.01f;
     lights.pointLights.push_back(orbitLight);
 
-    printf("\n=== CONTROLS ===\n");
-    printf("  1/2/3=Camera  WASD=Move  Mouse=Rotate  Scroll=Zoom\n");
-    printf("  Space=Pause  +/-=Speed  O=Orbits  F=Fog  Z=ZPrep  H=Shadow  G=Bloom\n");
-    printf("  M=MaterialEditor  N/P=SelectBody  Up/Dn=Adjust  L/R=Param  5/6/7=Preset  8=Reset\n");
-    printf("  ESC=Exit\n\n");
+    printf("\n");
+    printf("╔══════════════════════════════════════════════════════════════╗\n");
+    printf("║           太阳系多材质PBR渲染系统 — 按键功能表              ║\n");
+    printf("╠══════════════════════════════════════════════════════════════╣\n");
+    printf("║                                                              ║\n");
+    printf("║  【相机视角切换】                                            ║\n");
+    printf("║    1  —— 自由相机模式 (Free Camera)  WASD飞行 鼠标旋转     ║\n");
+    printf("║    2  —— 轨道相机模式 (Orbit Camera) 围绕天体旋转          ║\n");
+    printf("║    3  —— 俯视全局模式 (Top-Down View) 从上方俯瞰太阳系    ║\n");
+    printf("║                                                              ║\n");
+    printf("║  【视角操控】                                                ║\n");
+    printf("║    Tab       —— 切换轨道目标天体 (太阳→水星→金星→...)     ║\n");
+    printf("║    鼠标左键拖拽 —— 旋转视角                                ║\n");
+    printf("║    鼠标中键拖拽 —— 平移视角                                ║\n");
+    printf("║    鼠标中键单击 —— 重置当前视角                            ║\n");
+    printf("║    鼠标滚轮     —— 拉近/拉远                                ║\n");
+    printf("║    Shift 按住  —— 自由模式下加速移动 (3.5倍速)             ║\n");
+    printf("║    WASD        —— 自由模式下前后左右移动                   ║\n");
+    printf("║    E / C       —— 自由模式下上升/下降                      ║\n");
+    printf("║                                                              ║\n");
+    printf("║  【系统控制】                                                ║\n");
+    printf("║    空格键 —— 暂停/恢复时间流逝                             ║\n");
+    printf("║    +/-    —— 加速/减速时间倍率                             ║\n");
+    printf("║    R      —— 重置模拟时间                                  ║\n");
+    printf("║    ESC    —— 退出程序                                      ║\n");
+    printf("║                                                              ║\n");
+    printf("║  【显示开关】                                                ║\n");
+    printf("║    O —— 显示/隐藏轨道线                                    ║\n");
+    printf("║    F —— 开启/关闭雾效                                     ║\n");
+    printf("║    L —— 切换滚轮模式 (缩放 / 太阳亮度调节)                ║\n");
+    printf("║    H —— 开启/关闭阴影映射                                 ║\n");
+    printf("║    G —— 开启/关闭Bloom泛光后处理                          ║\n");
+    printf("║    Z —— 开启/关闭Z-Prepass深度预剔除                      ║\n");
+    printf("║    A —— 显示/隐藏小行星带                                 ║\n");
+    printf("║    B —— 手动/硬件背面剔除切换                             ║\n");
+    printf("║    V —— 深度可视化覆盖层                                  ║\n");
+    printf("║                                                              ║\n");
+    printf("║  【材质编辑器】 (M键开启)                                   ║\n");
+    printf("║    M      —— 开启/关闭材质编辑器                           ║\n");
+    printf("║    N / P  —— 选择下一个/上一个天体                         ║\n");
+    printf("║    ↑ ↓    —— 增大/减小当前材质参数                        ║\n");
+    printf("║    ← →    —— 切换上一个/下一个参数项                      ║\n");
+    printf("║    5      —— 应用熔岩(Lava)材质预设                       ║\n");
+    printf("║    6      —— 应用冰晶(Ice Crystal)材质预设                ║\n");
+    printf("║    7      —— 应用金属小行星(Metallic)材质预设             ║\n");
+    printf("║    8      —— 重置天体为默认材质                           ║\n");
+    printf("║                                                              ║\n");
+    printf("╚══════════════════════════════════════════════════════════════╝\n\n");
 
     double lastTime=window.getTime();
 
@@ -856,9 +948,7 @@ int main() {
             cos(lightAngle) * lightDist, 0.5f * CelestialBody::ORBIT_SCALE,
             sin(lightAngle) * lightDist);
 
-        if (camera.mode==ORBIT_CAMERA)
-            camera.updateFollowTarget(solarSystem.sunPosition());
-
+        camera.updateTransition((float)dt);
         renderScene();
         zBuffer.update();
     }

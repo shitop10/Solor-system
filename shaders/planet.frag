@@ -418,7 +418,7 @@ void main()
     vec4 fragPosLight = lightSpaceMatrix * vec4(FragPos, 1.0);
 
     // ── Accumulate lighting ────────────────────────────
-    vec3 result = emissive + matAmb * 0.25;
+    vec3 result = emissive + matAmb * 0.7;
 
     for (int i = 0; i < numPointLights && i < MAX_LIGHTS; i++) {
         result += calcPBLight(pointLights[i], N, V, albedo,

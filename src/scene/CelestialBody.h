@@ -106,9 +106,11 @@ public:
 
     float getVisualRadius() const {
         double earthRad = 6371.0;
-        if (name == "Sun") return 2.0f;
+        if (name == "Sun") return 5.0f;
         double ratio = radius / earthRad;
-        return (float)(0.15 + 0.65 * pow(ratio, 0.40));
+        // exponent 0.70 preserves relative size ordering better than 0.40
+        // Jupiter ~4x Earth, Saturn ~3.5x, Uranus/Neptune ~2x
+        return (float)(0.25 + 0.55 * pow(ratio, 0.70));
     }
 
     // ── World position (scaled for display) ────────────
