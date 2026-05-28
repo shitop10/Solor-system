@@ -15,9 +15,9 @@ public:
     glm::vec3 freePos    = glm::vec3(0.0f, 15.0f, 40.0f);
     float freeYaw        = -90.0f;
     float freePitch      = -15.0f;
-    float freeSpeed      = 12.0f;
+    float freeSpeed      = 2.0f;
     float freeSensitivity = 0.15f;
-    float freeSpeedBoost = 1.0f;    // multiplier (Shift = 3x)
+    float freeSpeedBoost = 1.0f;    // multiplier (Shift = 2.5x)
 
     // ── Orbit camera ──────────────────────────────────
     glm::vec3 orbitTarget = glm::vec3(0.0f);
@@ -134,7 +134,7 @@ public:
     }
 
     void setSpeedBoost(bool active) {
-        freeSpeedBoost = active ? 3.5f : 1.0f;
+        freeSpeedBoost = active ? 2.5f : 1.0f;
     }
 
     void moveForward(float amount) {

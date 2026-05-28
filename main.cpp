@@ -636,18 +636,29 @@ void renderScene() {
         glDepthMask(GL_TRUE);
     }
 
-    // 4b. Moon
+    // 4b. Moon — orbit around Earth in display coords
     if (solarSystem.moon) {
         planetShader->use();
         planetShader->setInt("planetType", 9);
-        float moonScale = 0.08f;
+
+        glm::vec3 earthDisplay = solarSystem.earthWorldPos();
+        float moonR = solarSystem.moon->getVisualRadius();
+        float moonOrbitR = 2.0f;  // display units from Earth center
+        double moonAngle = solarSystem.moon->orbitAngle;
+
+        // Moon's orbital plane is tilted ~5.1° relative to ecliptic
+        glm::vec3 moonOffset(
+            (float)cos(moonAngle) * moonOrbitR,
+            (float)sin(moonAngle) * moonOrbitR * 0.25f,
+            (float)sin(moonAngle) * moonOrbitR
+        );
+        glm::vec3 moonWorld = earthDisplay + moonOffset;
+
         glm::mat4 moonModel = glm::mat4(1.0f);
-        glm::vec3 moonWorld = solarSystem.earthWorldPos() +
-            glm::vec3((float)solarSystem.moon->position.x * CelestialBody::ORBIT_SCALE * 0.05,
-                      (float)solarSystem.moon->position.y * CelestialBody::ORBIT_SCALE * 0.05,
-                      (float)solarSystem.moon->position.z * CelestialBody::ORBIT_SCALE * 0.05);
         moonModel = glm::translate(moonModel, moonWorld);
-        moonModel = glm::scale(moonModel, glm::vec3(moonScale));
+        moonModel = glm::rotate(moonModel, (float)solarSystem.moon->rotationAngle,
+                                glm::vec3(0.0f, 1.0f, 0.0f));
+        moonModel = glm::scale(moonModel, glm::vec3(moonR));
 
         planetShader->setBool("useDiffuseMap", true);
         planetShader->setBool("useSpecularMap", false);
@@ -777,9 +788,10 @@ void renderScene() {
 // ── Main ──────────────────────────────────────────────
 int main() {
     AllocConsole();
-    freopen("CONOUT$","w",stdout);
-    freopen("CONOUT$","w",stderr);
-    SetConsoleOutputCP(65001);  // UTF-8 for Chinese character support
+    SetConsoleOutputCP(CP_UTF8);
+    SetConsoleCP(CP_UTF8);
+    freopen("CONOUT$", "w", stdout);
+    freopen("CONOUT$", "w", stderr);
     printf("=== Solar System 3D — Multi-Material PBR Renderer ===\n");
 
     if (!window.create("Solar System 3D",1280,720,true)) {
@@ -896,7 +908,7 @@ int main() {
     printf("║    鼠标中键拖拽 —— 平移视角                                ║\n");
     printf("║    鼠标中键单击 —— 重置当前视角                            ║\n");
     printf("║    鼠标滚轮     —— 拉近/拉远                                ║\n");
-    printf("║    Shift 按住  —— 自由模式下加速移动 (3.5倍速)             ║\n");
+    printf("║    Shift 按住  —— 自由模式下加速移动 (2.5倍速)             ║\n");
     printf("║    WASD        —— 自由模式下前后左右移动                   ║\n");
     printf("║    E / C       —— 自由模式下上升/下降                      ║\n");
     printf("║                                                              ║\n");

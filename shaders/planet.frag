@@ -386,7 +386,44 @@ void main()
 
     // ── Albedo ─────────────────────────────────────────
     vec3 albedo;
-    if (useDiffuseMap) {
+    if (planetType == 0) {
+        // ═══════════════════════════════════════════════════
+        //  Sun: animated granulation + sunspots + limb darkening
+        //  Granulation cells drift at ~0.02–0.04 UV/s,
+        //  sunspots evolve at ~0.01 UV/s for a realistic look.
+        // ═══════════════════════════════════════════════════
+        float t = simTime;
+
+        // --- multi-scale flowing granulation (Voronoi cells) ---
+        vec2 uvFlow = uv + vec2(t * 0.015, t * 0.008);
+        float d2A, d2B;
+        float cellL = voronoi(uvFlow * 28.0 + t * 0.012, d2A);
+        float cellS = voronoi(uvFlow * 55.0 + t * 0.022 + 3.0, d2B);
+        float edgeL = 1.0 - exp(-(d2A - cellL) * 14.0);
+        float edgeS = 1.0 - exp(-(d2B - cellS) * 10.0);
+
+        // --- turbulent distortion ---
+        float turb = fbm(uv * 5.5 + t * 0.025, 4) * 0.40 + 0.60;
+
+        // --- dynamic sunspots (two octaves, evolving) ---
+        float spot1 = fbm(uv * 11.0 + t * 0.009 + 2.5, 3);
+        float spot2 = fbm(uv * 11.0 + t * 0.011 - 1.8, 3);
+        float spot  = smoothstep(0.62, 0.80, (spot1 + spot2) * 0.50);
+
+        // --- composite brightness ---
+        float bright = 0.50 + edgeL * 0.23 + edgeS * 0.12 + turb * 0.18 - spot * 0.35;
+        bright = clamp(bright, 0.04, 1.0);
+
+        // --- temperature colour: core ~5778 K warm-white, spots redder ---
+        vec3 coreCol = vec3(1.00, 0.94, 0.72);
+        vec3 spotCol = vec3(0.82, 0.42, 0.10);
+        albedo = mix(spotCol, coreCol, bright);
+
+        // --- limb darkening (edges appear cooler & darker) ---
+        float NdotV = max(dot(N, V), 0.0);
+        float limb = 1.0 - pow(1.0 - NdotV, 2.8) * 0.55;
+        albedo *= limb;
+    } else if (useDiffuseMap) {
         albedo = texture(diffuseMap, uv).rgb;
     } else {
         albedo = proceduralColor(uv);
@@ -410,9 +447,9 @@ void main()
     float clearcoatR = clamp(material_clearcoatRoughness, 0.01, 1.0);
     vec3  emissive = material_emissive;
 
-    // Planet-type specific emissive boost for Sun
+    // Planet-type specific emissive — Sun is fully self-luminous
     if (planetType == 0)
-        emissive = albedo * 1.3;
+        emissive = albedo * 1.8;
 
     // ── Compute light-space position for shadow ─────────
     vec4 fragPosLight = lightSpaceMatrix * vec4(FragPos, 1.0);

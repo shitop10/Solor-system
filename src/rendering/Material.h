@@ -61,16 +61,16 @@ struct Material {
     //  Material Preset Factory — 13 distinct celestial materials
     // =================================================================
 
-    // ── Sun: blazing plasma with dynamic granulation ─────
+    // ── Sun: photosphere ~5778 K, warm-white self-luminous plasma ──
     static Material createSun() {
         Material m;
         m.type = MAT_PLASMA;
-        m.presetName = "Solar Plasma";
-        m.ambient   = glm::vec3(1.0f, 0.85f, 0.20f);
-        m.diffuse   = glm::vec3(1.0f, 0.95f, 0.60f);
-        m.specular  = glm::vec3(0.15f, 0.15f, 0.08f);
-        m.emissive  = glm::vec3(2.5f, 1.4f, 0.18f);
-        m.roughness = 0.18f;
+        m.presetName = "Solar Photosphere";
+        m.ambient   = glm::vec3(1.0f, 0.92f, 0.65f);
+        m.diffuse   = glm::vec3(1.0f, 0.97f, 0.82f);
+        m.specular  = glm::vec3(0.06f, 0.06f, 0.05f);
+        m.emissive  = glm::vec3(2.8f, 2.0f, 0.9f);
+        m.roughness = 0.12f;
         m.metallic  = 0.0f;
         m.anisotropy = 0.0f;
         m.subsurface = 0.0f;
@@ -78,16 +78,174 @@ struct Material {
         return m;
     }
 
-    // ── Mercury: heavily cratered grey rock, very rough ──
+    // ── Mercury: ~0.12 albedo, cratered regolith, no atmosphere ──
     static Material createMercury() {
         Material m;
         m.type = MAT_ROCKY;
         m.presetName = "Cratered Regolith";
-        m.ambient   = glm::vec3(0.08f, 0.08f, 0.09f);
-        m.diffuse   = glm::vec3(0.82f, 0.82f, 0.85f);
-        m.specular  = glm::vec3(0.04f, 0.04f, 0.05f);
+        m.ambient   = glm::vec3(0.05f, 0.05f, 0.06f);
+        m.diffuse   = glm::vec3(0.62f, 0.62f, 0.65f);
+        m.specular  = glm::vec3(0.04f, 0.04f, 0.04f);
+        m.emissive  = glm::vec3(0.0f);
+        m.roughness = 0.88f;
+        m.metallic  = 0.03f;
+        m.anisotropy = 0.0f;
+        m.subsurface = 0.0f;
+        m.clearcoat  = 0.0f;
+        return m;
+    }
+
+    // ── Venus: ~0.75 albedo, thick H₂SO₄ cloud deck, diffuse ──
+    static Material createVenus() {
+        Material m;
+        m.type = MAT_CLOUD;
+        m.presetName = "Sulfuric Cloud Deck";
+        m.ambient   = glm::vec3(0.12f, 0.10f, 0.06f);
+        m.diffuse   = glm::vec3(0.88f, 0.82f, 0.58f);
+        m.specular  = glm::vec3(0.04f, 0.04f, 0.03f);
+        m.emissive  = glm::vec3(0.0f);
+        m.roughness = 0.60f;
+        m.metallic  = 0.0f;
+        m.anisotropy = 0.0f;
+        m.subsurface = 0.28f;
+        m.clearcoat  = 0.06f;
+        m.clearcoatRoughness = 0.40f;
+        return m;
+    }
+
+    // ── Earth: ~0.30 albedo, ocean Fresnel + Rayleigh atmosphere ──
+    static Material createEarth() {
+        Material m;
+        m.type = MAT_TERRESTRIAL;
+        m.presetName = "Oceanic Terrestrial";
+        m.ambient   = glm::vec3(0.05f, 0.07f, 0.14f);
+        m.diffuse   = glm::vec3(0.95f, 0.95f, 0.95f);
+        m.specular  = glm::vec3(0.04f, 0.04f, 0.04f);
+        m.emissive  = glm::vec3(0.0f);
+        m.roughness = 0.42f;
+        m.metallic  = 0.0f;
+        m.anisotropy = 0.0f;
+        m.subsurface = 0.08f;
+        m.clearcoat  = 0.28f;
+        m.clearcoatRoughness = 0.12f;
+        return m;
+    }
+
+    // ── Mars: ~0.25 albedo, iron-oxide regolith, dusty desert ──
+    static Material createMars() {
+        Material m;
+        m.type = MAT_ROCKY;
+        m.presetName = "Iron Oxide Desert";
+        m.ambient   = glm::vec3(0.08f, 0.04f, 0.02f);
+        m.diffuse   = glm::vec3(0.78f, 0.42f, 0.20f);
+        m.specular  = glm::vec3(0.04f, 0.03f, 0.02f);
+        m.emissive  = glm::vec3(0.0f);
+        m.roughness = 0.82f;
+        m.metallic  = 0.05f;
+        m.anisotropy = 0.0f;
+        m.subsurface = 0.02f;
+        m.clearcoat  = 0.0f;
+        return m;
+    }
+
+    // ── Jupiter: ~0.52 albedo, turbulent banded atmosphere ──
+    static Material createJupiter() {
+        Material m;
+        m.type = MAT_GAS_GIANT;
+        m.presetName = "Banded Gas Giant";
+        m.ambient   = glm::vec3(0.10f, 0.08f, 0.05f);
+        m.diffuse   = glm::vec3(0.88f, 0.76f, 0.50f);
+        m.specular  = glm::vec3(0.03f, 0.03f, 0.02f);
+        m.emissive  = glm::vec3(0.0f);
+        m.roughness = 0.72f;
+        m.metallic  = 0.0f;
+        m.anisotropy = 0.06f;
+        m.subsurface = 0.12f;
+        m.clearcoat  = 0.0f;
+        return m;
+    }
+
+    // ── Saturn: ~0.47 albedo, pale banded gas, subtler than Jupiter ──
+    static Material createSaturn() {
+        Material m;
+        m.type = MAT_GAS_GIANT;
+        m.presetName = "Pale Gas Giant";
+        m.ambient   = glm::vec3(0.12f, 0.10f, 0.06f);
+        m.diffuse   = glm::vec3(0.90f, 0.85f, 0.65f);
+        m.specular  = glm::vec3(0.03f, 0.03f, 0.02f);
+        m.emissive  = glm::vec3(0.0f);
+        m.roughness = 0.68f;
+        m.metallic  = 0.0f;
+        m.anisotropy = 0.04f;
+        m.subsurface = 0.10f;
+        m.clearcoat  = 0.03f;
+        m.clearcoatRoughness = 0.50f;
+        return m;
+    }
+
+    // ── Uranus: ~0.51 albedo, smooth featureless ice giant, retrograde ──
+    static Material createUranus() {
+        Material m;
+        m.type = MAT_ICE_GIANT;
+        m.presetName = "Smooth Ice Giant";
+        m.ambient   = glm::vec3(0.06f, 0.12f, 0.15f);
+        m.diffuse   = glm::vec3(0.75f, 0.85f, 0.92f);
+        m.specular  = glm::vec3(0.04f, 0.04f, 0.04f);
+        m.emissive  = glm::vec3(0.0f);
+        m.roughness = 0.18f;
+        m.metallic  = 0.02f;
+        m.anisotropy = 0.0f;
+        m.subsurface = 0.28f;
+        m.clearcoat  = 0.42f;
+        m.clearcoatRoughness = 0.06f;
+        return m;
+    }
+
+    // ── Neptune: ~0.41 albedo, deep blue ice giant, subtle storms ──
+    static Material createNeptune() {
+        Material m;
+        m.type = MAT_ICE_GIANT;
+        m.presetName = "Deep Ice Giant";
+        m.ambient   = glm::vec3(0.04f, 0.07f, 0.15f);
+        m.diffuse   = glm::vec3(0.62f, 0.72f, 0.92f);
+        m.specular  = glm::vec3(0.04f, 0.04f, 0.04f);
+        m.emissive  = glm::vec3(0.0f);
+        m.roughness = 0.22f;
+        m.metallic  = 0.02f;
+        m.anisotropy = 0.0f;
+        m.subsurface = 0.25f;
+        m.clearcoat  = 0.38f;
+        m.clearcoatRoughness = 0.07f;
+        return m;
+    }
+
+    // ── Moon: ~0.12 albedo, anorthosite regolith, heavily cratered ──
+    static Material createMoon() {
+        Material m;
+        m.type = MAT_ROCKY;
+        m.presetName = "Lunar Regolith";
+        m.ambient   = glm::vec3(0.04f, 0.04f, 0.05f);
+        m.diffuse   = glm::vec3(0.60f, 0.60f, 0.63f);
+        m.specular  = glm::vec3(0.03f, 0.03f, 0.03f);
         m.emissive  = glm::vec3(0.0f);
         m.roughness = 0.92f;
+        m.metallic  = 0.02f;
+        m.anisotropy = 0.0f;
+        m.subsurface = 0.0f;
+        m.clearcoat  = 0.0f;
+        return m;
+    }
+
+    // ── Asteroid: C-type carbonaceous, ~0.03–0.09 albedo, very dark ──
+    static Material createAsteroid() {
+        Material m;
+        m.type = MAT_ROCKY;
+        m.presetName = "Carbonaceous Chondrite";
+        m.ambient   = glm::vec3(0.03f, 0.03f, 0.02f);
+        m.diffuse   = glm::vec3(0.42f, 0.38f, 0.32f);
+        m.specular  = glm::vec3(0.02f, 0.02f, 0.02f);
+        m.emissive  = glm::vec3(0.0f);
+        m.roughness = 0.94f;
         m.metallic  = 0.04f;
         m.anisotropy = 0.0f;
         m.subsurface = 0.0f;
@@ -95,227 +253,71 @@ struct Material {
         return m;
     }
 
-    // ── Venus: thick sulfuric cloud layer, soft diffuse ──
-    static Material createVenus() {
-        Material m;
-        m.type = MAT_CLOUD;
-        m.presetName = "Sulfuric Clouds";
-        m.ambient   = glm::vec3(0.18f, 0.14f, 0.07f);
-        m.diffuse   = glm::vec3(0.90f, 0.83f, 0.58f);
-        m.specular  = glm::vec3(0.12f, 0.10f, 0.06f);
-        m.emissive  = glm::vec3(0.0f);
-        m.roughness = 0.72f;
-        m.metallic  = 0.0f;
-        m.anisotropy = 0.0f;
-        m.subsurface = 0.15f;   // thick atmosphere scatters light
-        m.clearcoat  = 0.0f;
-        return m;
-    }
-
-    // ── Earth: oceans + continents, moderate specular ────
-    static Material createEarth() {
-        Material m;
-        m.type = MAT_TERRESTRIAL;
-        m.presetName = "Oceanic Terrestrial";
-        m.ambient   = glm::vec3(0.06f, 0.08f, 0.15f);
-        m.diffuse   = glm::vec3(0.95f, 0.95f, 0.95f);
-        m.specular  = glm::vec3(0.55f, 0.55f, 0.58f);
-        m.emissive  = glm::vec3(0.0f);
-        m.roughness = 0.38f;
-        m.metallic  = 0.0f;
-        m.anisotropy = 0.0f;
-        m.subsurface = 0.08f;    // thin atmosphere
-        m.clearcoat  = 0.30f;    // ocean specular (boosted for visibility)
-        m.clearcoatRoughness = 0.10f;
-        return m;
-    }
-
-    // ── Mars: iron oxide rust, rough porous surface ──────
-    static Material createMars() {
-        Material m;
-        m.type = MAT_ROCKY;
-        m.presetName = "Iron Oxide Desert";
-        m.ambient   = glm::vec3(0.10f, 0.04f, 0.02f);
-        m.diffuse   = glm::vec3(0.88f, 0.52f, 0.28f);
-        m.specular  = glm::vec3(0.06f, 0.03f, 0.02f);
-        m.emissive  = glm::vec3(0.0f);
-        m.roughness = 0.85f;
-        m.metallic  = 0.08f;
-        m.anisotropy = 0.0f;
-        m.subsurface = 0.0f;
-        m.clearcoat  = 0.0f;
-        return m;
-    }
-
-    // ── Jupiter: banded gas giant, turbulent atmosphere ──
-    static Material createJupiter() {
-        Material m;
-        m.type = MAT_GAS_GIANT;
-        m.presetName = "Banded Gas Giant";
-        m.ambient   = glm::vec3(0.12f, 0.10f, 0.06f);
-        m.diffuse   = glm::vec3(0.90f, 0.78f, 0.52f);
-        m.specular  = glm::vec3(0.04f, 0.03f, 0.02f);
-        m.emissive  = glm::vec3(0.0f);
-        m.roughness = 0.80f;
-        m.metallic  = 0.0f;
-        m.anisotropy = 0.0f;
-        m.subsurface = 0.08f;    // deep atmosphere scattering
-        m.clearcoat  = 0.0f;
-        return m;
-    }
-
-    // ── Saturn: pale yellow, smooth banded gas ───────────
-    static Material createSaturn() {
-        Material m;
-        m.type = MAT_GAS_GIANT;
-        m.presetName = "Pale Gas Giant";
-        m.ambient   = glm::vec3(0.15f, 0.12f, 0.07f);
-        m.diffuse   = glm::vec3(0.93f, 0.88f, 0.68f);
-        m.specular  = glm::vec3(0.05f, 0.04f, 0.03f);
-        m.emissive  = glm::vec3(0.0f);
-        m.roughness = 0.76f;
-        m.metallic  = 0.0f;
-        m.anisotropy = 0.0f;
-        m.subsurface = 0.06f;
-        m.clearcoat  = 0.0f;
-        return m;
-    }
-
-    // ── Uranus: smooth ice giant, cyan with high specular ─
-    static Material createUranus() {
-        Material m;
-        m.type = MAT_ICE_GIANT;
-        m.presetName = "Smooth Ice Giant";
-        m.ambient   = glm::vec3(0.08f, 0.13f, 0.16f);
-        m.diffuse   = glm::vec3(0.78f, 0.88f, 0.94f);
-        m.specular  = glm::vec3(0.48f, 0.50f, 0.55f);
-        m.emissive  = glm::vec3(0.0f);
-        m.roughness = 0.22f;
-        m.metallic  = 0.03f;
-        m.anisotropy = 0.0f;
-        m.subsurface = 0.25f;    // boosted: icy subsurface scattering
-        m.clearcoat  = 0.45f;    // boosted: icy surface glaze
-        m.clearcoatRoughness = 0.08f;
-        return m;
-    }
-
-    // ── Neptune: deep blue ice giant, moderate specular ──
-    static Material createNeptune() {
-        Material m;
-        m.type = MAT_ICE_GIANT;
-        m.presetName = "Deep Ice Giant";
-        m.ambient   = glm::vec3(0.05f, 0.08f, 0.16f);
-        m.diffuse   = glm::vec3(0.68f, 0.76f, 0.94f);
-        m.specular  = glm::vec3(0.42f, 0.45f, 0.52f);
-        m.emissive  = glm::vec3(0.0f);
-        m.roughness = 0.25f;
-        m.metallic  = 0.03f;
-        m.anisotropy = 0.0f;
-        m.subsurface = 0.22f;    // boosted
-        m.clearcoat  = 0.40f;    // boosted
-        m.clearcoatRoughness = 0.08f;
-        return m;
-    }
-
-    // ── Moon: heavily cratered grey rock, matte ──────────
-    static Material createMoon() {
-        Material m;
-        m.type = MAT_ROCKY;
-        m.presetName = "Lunar Regolith";
-        m.ambient   = glm::vec3(0.06f, 0.06f, 0.07f);
-        m.diffuse   = glm::vec3(0.75f, 0.75f, 0.78f);
-        m.specular  = glm::vec3(0.03f, 0.03f, 0.04f);
-        m.emissive  = glm::vec3(0.0f);
-        m.roughness = 0.94f;
-        m.metallic  = 0.02f;
-        m.anisotropy = 0.0f;
-        m.subsurface = 0.0f;
-        m.clearcoat  = 0.0f;
-        return m;
-    }
-
-    // ── Asteroid: dark carbonaceous rock ────────────────
-    static Material createAsteroid() {
-        Material m;
-        m.type = MAT_ROCKY;
-        m.presetName = "Carbonaceous Rock";
-        m.ambient   = glm::vec3(0.04f, 0.04f, 0.03f);
-        m.diffuse   = glm::vec3(0.52f, 0.45f, 0.38f);
-        m.specular  = glm::vec3(0.02f, 0.02f, 0.02f);
-        m.emissive  = glm::vec3(0.0f);
-        m.roughness = 0.96f;
-        m.metallic  = 0.06f;
-        m.anisotropy = 0.0f;
-        m.subsurface = 0.0f;
-        m.clearcoat  = 0.0f;
-        return m;
-    }
-
-    // ── NEW: Lava — volcanic, self-luminous, dynamic ─────
+    // ── Lava: Io-like volcanic, ~1200–1500 K thermal emission ──
     static Material createLava() {
         Material m;
         m.type = MAT_LAVA;
-        m.presetName = "Volcanic Lava";
+        m.presetName = "Silicate Melt";
         m.ambient   = glm::vec3(0.30f, 0.06f, 0.02f);
-        m.diffuse   = glm::vec3(0.85f, 0.25f, 0.04f);
-        m.specular  = glm::vec3(0.10f, 0.05f, 0.02f);
-        m.emissive  = glm::vec3(1.80f, 0.40f, 0.03f);
-        m.roughness = 0.50f;
+        m.diffuse   = glm::vec3(0.82f, 0.24f, 0.04f);
+        m.specular  = glm::vec3(0.08f, 0.06f, 0.04f);
+        m.emissive  = glm::vec3(2.2f, 0.50f, 0.06f);
+        m.roughness = 0.44f;
         m.metallic  = 0.0f;
         m.anisotropy = 0.0f;
-        m.subsurface = 0.30f;    // lava glow spreads beneath surface
+        m.subsurface = 0.38f;
         m.clearcoat  = 0.0f;
         return m;
     }
 
-    // ── NEW: Ice Crystal — high transparency, specular ────
+    // ── Ice Crystal: Enceladus-like, ~0.99 albedo, fresh water ice ──
     static Material createIceCrystal() {
         Material m;
         m.type = MAT_ICE_CRYSTAL;
-        m.presetName = "Crystalline Ice";
-        m.ambient   = glm::vec3(0.12f, 0.15f, 0.20f);
-        m.diffuse   = glm::vec3(0.70f, 0.82f, 0.95f);
-        m.specular  = glm::vec3(0.90f, 0.92f, 0.95f);
+        m.presetName = "Crystalline Water Ice";
+        m.ambient   = glm::vec3(0.10f, 0.13f, 0.18f);
+        m.diffuse   = glm::vec3(0.68f, 0.80f, 0.94f);
+        m.specular  = glm::vec3(0.04f, 0.04f, 0.04f);
         m.emissive  = glm::vec3(0.0f);
         m.roughness = 0.08f;
         m.metallic  = 0.0f;
-        m.anisotropy = 0.15f;    // ice has slight anisotropy from crystal structure
-        m.subsurface = 0.40f;    // strong subsurface scattering in ice
-        m.clearcoat  = 0.55f;    // glossy ice surface
+        m.anisotropy = 0.15f;
+        m.subsurface = 0.45f;
+        m.clearcoat  = 0.52f;
         m.clearcoatRoughness = 0.05f;
         return m;
     }
 
-    // ── NEW: Metallic Asteroid — high metal content ──────
+    // ── Metallic Asteroid: M-type, nickel-iron, radar-bright ──
     static Material createMetallicAsteroid() {
         Material m;
         m.type = MAT_METALLIC;
-        m.presetName = "Metallic Asteroid";
-        m.ambient   = glm::vec3(0.08f, 0.07f, 0.06f);
-        m.diffuse   = glm::vec3(0.55f, 0.50f, 0.45f);
-        m.specular  = glm::vec3(0.65f, 0.60f, 0.55f);
+        m.presetName = "Nickel-Iron Meteorite";
+        m.ambient   = glm::vec3(0.06f, 0.05f, 0.04f);
+        m.diffuse   = glm::vec3(0.48f, 0.43f, 0.38f);
+        m.specular  = glm::vec3(0.58f, 0.53f, 0.46f);
         m.emissive  = glm::vec3(0.0f);
-        m.roughness = 0.35f;
-        m.metallic  = 0.85f;     // highly metallic
-        m.anisotropy = 0.30f;    // brushed metal look
+        m.roughness = 0.30f;
+        m.metallic  = 0.90f;
+        m.anisotropy = 0.28f;
         m.subsurface = 0.0f;
         m.clearcoat  = 0.0f;
         return m;
     }
 
-    // ── NEW: Martian Desert — finer variant of Mars ──────
+    // ── Desert Planet: warm sandy arid world, thin atmosphere ──
     static Material createDesertPlanet() {
         Material m;
         m.type = MAT_ROCKY;
-        m.presetName = "Sandy Desert";
-        m.ambient   = glm::vec3(0.15f, 0.10f, 0.05f);
-        m.diffuse   = glm::vec3(0.92f, 0.72f, 0.42f);
-        m.specular  = glm::vec3(0.06f, 0.05f, 0.03f);
+        m.presetName = "Arid Desert";
+        m.ambient   = glm::vec3(0.12f, 0.08f, 0.04f);
+        m.diffuse   = glm::vec3(0.86f, 0.66f, 0.36f);
+        m.specular  = glm::vec3(0.04f, 0.03f, 0.02f);
         m.emissive  = glm::vec3(0.0f);
-        m.roughness = 0.88f;
+        m.roughness = 0.85f;
         m.metallic  = 0.02f;
         m.anisotropy = 0.0f;
-        m.subsurface = 0.02f;
+        m.subsurface = 0.03f;
         m.clearcoat  = 0.0f;
         return m;
     }

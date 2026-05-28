@@ -101,24 +101,38 @@ public:
         rotationAngle += 2.0 * glm::pi<double>() * simYears / rotationPeriod;
     }
 
+    // ── Non-linear orbit-to-display radius ──────────────
+    // Real orbits span 0.387–30.07 AU (78× range). A power
+    // function compresses this into a viewable spread where
+    // inner planets clear the Sun disc and outer planets
+    // don't reach the far plane.
+    static double toDisplayRadius(double semiMajorAU) {
+        if (semiMajorAU <= 0.0) return 0.0;
+        return pow(semiMajorAU, 0.55) * 17.0;
+    }
+
     // ── Visual radius for display ─────────────────────
-    static constexpr float ORBIT_SCALE = 8.0f;
+    static constexpr float ORBIT_SCALE = 17.0f;
 
     float getVisualRadius() const {
         double earthRad = 6371.0;
         if (name == "Sun") return 5.0f;
         double ratio = radius / earthRad;
-        // exponent 0.70 preserves relative size ordering better than 0.40
-        // Jupiter ~4x Earth, Saturn ~3.5x, Uranus/Neptune ~2x
         return (float)(0.25 + 0.55 * pow(ratio, 0.70));
     }
 
-    // ── World position (scaled for display) ────────────
+    // ── World position (non-linear display scaling) ────
     glm::vec3 worldPos() const {
+        double auDist = sqrt(position.x * position.x +
+                             position.y * position.y +
+                             position.z * position.z);
+        if (auDist < 0.0001) return glm::vec3(0.0f);
+        double displayDist = toDisplayRadius(auDist);
+        double s = displayDist / auDist;
         return glm::vec3(
-            (float)(position.x * ORBIT_SCALE),
-            (float)(position.y * ORBIT_SCALE),
-            (float)(position.z * ORBIT_SCALE)
+            (float)(position.x * s),
+            (float)(position.y * s),
+            (float)(position.z * s)
         );
     }
 
@@ -184,8 +198,8 @@ public:
     void renderOrbit(Shader& orbitShader, const glm::mat4& view, const glm::mat4& projection) const {
         if (orbit.semiMajorAxis <= 0) return;
         orbitShader.use();
+        // orbitLine mesh is pre-built with toDisplayRadius, use identity model
         glm::mat4 model = glm::mat4(1.0f);
-        model = glm::scale(model, glm::vec3((float)orbit.semiMajorAxis));
         orbitShader.setMat4("model", model);
         orbitShader.setMat4("view", view);
         orbitShader.setMat4("projection", projection);

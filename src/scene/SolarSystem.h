@@ -158,7 +158,7 @@ public:
         // ── Assign shared meshes and orbit lines ──────────
         for (auto& b : bodies) {
             b->sphereMesh = sphereTemplate;
-            float orbitR = (float)(b->orbit.semiMajorAxis * CelestialBody::ORBIT_SCALE);
+            float orbitR = (float)CelestialBody::toDisplayRadius(b->orbit.semiMajorAxis);
             if (b->orbit.semiMajorAxis > 0)
                 b->orbitLine = Mesh::createOrbitLine(orbitR, 200);
         }
@@ -172,18 +172,18 @@ public:
         // Pre-allocated position buffer for batched rendering
         std::vector<glm::vec3> positions(count);
 
-        float innerAU = 2.1f;  // just beyond Mars (1.52 AU)
-        float outerAU = 3.3f;  // just before Jupiter (5.2 AU)
+        float innerAU = 2.1f;
+        float outerAU = 3.3f;
 
         for (int i = 0; i < count; i++) {
             float rnd = (float)std::rand() / RAND_MAX;
             float orbitAU = innerAU + (outerAU - innerAU) * (rnd * 0.7f + 0.15f);
 
-            asteroids[i].orbitRadius = orbitAU * CelestialBody::ORBIT_SCALE;
+            asteroids[i].orbitRadius = (float)CelestialBody::toDisplayRadius(orbitAU);
             asteroids[i].angle = (float)std::rand() / RAND_MAX * 6.28318f;
             asteroids[i].orbitSpeed = 1.0f / (orbitAU * std::sqrt(orbitAU)) * 0.5f;
             asteroids[i].yOffset = ((float)std::rand() / RAND_MAX - 0.5f) * 1.5f;
-            asteroids[i].scale = 1.0f;  // uniform for point sprite rendering
+            asteroids[i].scale = 1.0f;
 
             // Initial position
             float x = asteroids[i].orbitRadius * cos(asteroids[i].angle);
@@ -234,18 +234,11 @@ public:
         for (auto& a : asteroids)
             a.angle += (float)(simYears * a.orbitSpeed);
 
-        // Moon: orbit around Earth
+        // Moon: orbit around Earth — only update orbital angle,
+        // position is computed relative to Earth in main rendering
         if (moon) {
             moon->updatePosition(simulationTime);
-            // Find Earth position
-            glm::dvec3 earthPos(0.0);
-            for (auto& b : bodies) {
-                if (b->name == "Earth") { earthPos = b->position; break; }
-            }
-            // Moon orbits Earth with scaled-down offset
-            moon->position.x = earthPos.x + moon->position.x * 0.05;
-            moon->position.y = earthPos.y + moon->position.y * 0.05;
-            moon->position.z = earthPos.z + moon->position.z * 0.05;
+            moon->rotationAngle += 2.0 * glm::pi<double>() * simYears / moon->rotationPeriod;
         }
     }
 
