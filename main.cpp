@@ -53,6 +53,7 @@ bool shadowEnabled = true;
 bool scrollSunMode = false;   // L key: scroll adjusts sun intensity instead of zoom
 float sunIntensity = 1.5f;    // sun brightness multiplier
 int  fogModeIdx = 2;
+double startTime = 0;  // captured at startup for Sun animation elapsed time
 
 // ── Per-key edge-detection state ──
 struct KeyState {
@@ -601,6 +602,7 @@ void renderScene() {
     setupFog(*planetShader);
     planetShader->setVec3("viewPos", viewPos);
     planetShader->setFloat("simTime", (float)solarSystem.simulationTime);
+    planetShader->setFloat("uTime", (float)(window.getTime() - startTime));
 
     // Shadow uniforms
     planetShader->setBool("shadowEnabled", shadowEnabled);
@@ -941,7 +943,8 @@ int main() {
     printf("║                                                              ║\n");
     printf("╚══════════════════════════════════════════════════════════════╝\n\n");
 
-    double lastTime=window.getTime();
+    startTime = window.getTime();
+    double lastTime = startTime;
 
     while (window.pollEvents()) {
         processInput();
