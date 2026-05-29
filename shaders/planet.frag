@@ -18,6 +18,7 @@ out vec4 FragColor;
 // ── Planet identity ────────────────────────────────────
 uniform int planetType;
 uniform float simTime;
+uniform float uTime;   // real elapsed seconds (for Sun animation)
 
 // ── Camera ─────────────────────────────────────────────
 uniform vec3 viewPos;
@@ -389,30 +390,30 @@ void main()
     if (planetType == 0) {
         // ═══════════════════════════════════════════════════
         //  Sun: animated granulation + sunspots + limb darkening
-        //  Granulation cells drift at ~0.02–0.04 UV/s,
-        //  sunspots evolve at ~0.01 UV/s for a realistic look.
+        //  uTime = real elapsed seconds; t_scaled ≈ 0.15 UV/s drift,
+        //  granulation convects at visible speed, sunspots slowly morph.
         // ═══════════════════════════════════════════════════
-        float t = simTime;
+        float t = uTime;
 
         // --- multi-scale flowing granulation (Voronoi cells) ---
-        vec2 uvFlow = uv + vec2(t * 0.015, t * 0.008);
+        vec2 uvFlow  = uv + vec2(t * 0.025, t * 0.018);
         float d2A, d2B;
-        float cellL = voronoi(uvFlow * 28.0 + t * 0.012, d2A);
-        float cellS = voronoi(uvFlow * 55.0 + t * 0.022 + 3.0, d2B);
-        float edgeL = 1.0 - exp(-(d2A - cellL) * 14.0);
-        float edgeS = 1.0 - exp(-(d2B - cellS) * 10.0);
+        float cellL  = voronoi(uvFlow * 30.0 + t * 0.12, d2A);
+        float cellS  = voronoi(uvFlow * 58.0 + t * 0.20 + 3.5, d2B);
+        float edgeL  = 1.0 - exp(-(d2A - cellL) * 15.0);
+        float edgeS  = 1.0 - exp(-(d2B - cellS) * 11.0);
 
         // --- turbulent distortion ---
-        float turb = fbm(uv * 5.5 + t * 0.025, 4) * 0.40 + 0.60;
+        float turb = fbm(uv * 5.5 + t * 0.18, 4) * 0.40 + 0.60;
 
-        // --- dynamic sunspots (two octaves, evolving) ---
-        float spot1 = fbm(uv * 11.0 + t * 0.009 + 2.5, 3);
-        float spot2 = fbm(uv * 11.0 + t * 0.011 - 1.8, 3);
-        float spot  = smoothstep(0.62, 0.80, (spot1 + spot2) * 0.50);
+        // --- dynamic sunspots (two octaves, slowly evolving) ---
+        float spot1 = fbm(uv * 12.0 + t * 0.06 + 2.5, 3);
+        float spot2 = fbm(uv * 12.0 + t * 0.08 - 1.8, 3);
+        float spot  = smoothstep(0.60, 0.82, (spot1 + spot2) * 0.50);
 
         // --- composite brightness ---
-        float bright = 0.50 + edgeL * 0.23 + edgeS * 0.12 + turb * 0.18 - spot * 0.35;
-        bright = clamp(bright, 0.04, 1.0);
+        float bright = 0.50 + edgeL * 0.23 + edgeS * 0.12 + turb * 0.18 - spot * 0.38;
+        bright = clamp(bright, 0.03, 1.0);
 
         // --- temperature colour: core ~5778 K warm-white, spots redder ---
         vec3 coreCol = vec3(1.00, 0.94, 0.72);

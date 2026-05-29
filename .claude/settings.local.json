@@ -30,7 +30,9 @@
       "Bash(tasklist)",
       "Bash(taskkill /f /im solar_system.exe)",
       "Bash(cp \"C:/Users/88571/Desktop/计算机图形学课设/Solor-system/shaders/\"*.vert \"C:/Users/88571/Desktop/计算机图形学课设/Solor-system/build/Debug/shaders/\")",
-      "Bash(cp \"C:/Users/88571/Desktop/计算机图形学课设/Solor-system/shaders/\"*.frag \"C:/Users/88571/Desktop/计算机图形学课设/Solor-system/build/Debug/shaders/\")"
+      "Bash(cp \"C:/Users/88571/Desktop/计算机图形学课设/Solor-system/shaders/\"*.frag \"C:/Users/88571/Desktop/计算机图形学课设/Solor-system/build/Debug/shaders/\")",
+      "Bash(cmake *)",
+      "Bash(powershell *)"
     ]
   }
 }
